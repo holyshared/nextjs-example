@@ -1,28 +1,24 @@
 import type { InferGetStaticPropsType } from 'next'
 import Link from 'next/link'
 
-const products = new Map<string, { name: string }>([
-  ['1', { name: 'a' }],
-  ['2', { name: 'b' }],
-  ['3', { name: 'c' }]
-])
-
 type Product = {
   name: string
 }
 
 // This function gets called at build time
 export async function getStaticPaths() {
-  const paths = [
-    { params: { id: '1' } },
-    { params: { id: '2' } },
-    { params: { id: '3' } }
-  ]
+  const res = await fetch('http://localhost:3000/api/products')
+  const data = await res.json() as { products: {id: string, name: string}[] }
+
+  const paths = data.products.map(product => (
+    { params: { id: product.id } }
+  ))
   return { paths, fallback: false }
 }
 
 export const getStaticProps = async ({ params }: { params: { id: string } }) => {
-  const product = products.get(params.id)
+  const res = await fetch(`http://localhost:3000/api/products/${params.id}`)
+  const product = await res.json() as { id: string, name: string }
 
   if (!product) {
     return {
